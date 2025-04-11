@@ -1,22 +1,24 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const registerRoutes = require('./routes/registerRoutes');
-
-dotenv.config();
+const mongoose = require('mongoose');
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 
-app.use(express.json()); 
-app.use(cors());      
+// Connect to MongoDB (use environment variables)
+mongoose.connect(process.env.MONGODB_URI);
 
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((error) => console.error('Error connecting to MongoDB', error));
-
-app.use('/api', registerRoutes);
-
-app.listen(5000, () => {
-  console.log('Server is running on http://localhost:5000');
+// Your routes
+app.post('/api/register', async (req, res) => {
+  try {
+    const registration = new Registration(req.body);
+    await registration.save();
+    res.status(200).json({ message: 'Registration successful' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error saving data' });
+  }
 });
+
+// Export as a Vercel Serverless Function
+module.exports = app;
